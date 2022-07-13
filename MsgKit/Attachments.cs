@@ -135,6 +135,9 @@ namespace MsgKit
         /// <param name="renderingPosition">Indicates how an attachment should be displayed in a rich text message</param>
         /// <param name="isInline">Set to true to add the attachment inline</param>
         /// <param name="contentId">The id for the inline attachment when <paramref name="isInline" /> is set to true</param>
+        /// <param name="type">The attachment type</param>
+        /// <param name="creationTime">The date and time when the attachment was created</param>
+        /// <param name="lastModificationTime">The date and time when the attachment was last modified</param>
         /// <exception cref="ArgumentNullException">Raised when the stream is null</exception>
         /// <exception cref="MKAttachmentExists">Raised when an attachment with the same name already exists</exception>
         /// <exception cref="ArgumentNullException">
@@ -145,7 +148,10 @@ namespace MsgKit
                         string fileName, 
                         long renderingPosition = -1,
                         bool isInline = false, 
-                        string contentId = "")
+                        string contentId = "",
+                        AttachmentType type = AttachmentType.ATTACH_BY_VALUE,
+                        DateTime? creationTime = null,
+                        DateTime? lastModificationTime = null)
         {
             if (Count >= 2048)
                 throw new MKAttachment("To many attachments, an msg file can have a maximum of 2048 attachment");
@@ -158,9 +164,9 @@ namespace MsgKit
 
             Add(new Attachment(stream,
                 fileName,
-                dateTime,
-                dateTime,
-                AttachmentType.ATTACH_BY_VALUE,
+                creationTime ?? dateTime,
+                lastModificationTime ?? dateTime,
+                type,
                 renderingPosition,
                 isInline,
                 contentId));
@@ -282,12 +288,12 @@ namespace MsgKit
         /// <summary>
         ///     The date and time when the attachment was created
         /// </summary>
-        public DateTime CreationTime { get; }
+        public DateTime? CreationTime { get; }
 
         /// <summary>
         ///     The date and time when the attachment was last modified
         /// </summary>
-        public DateTime LastModificationTime { get; }
+        public DateTime? LastModificationTime { get; }
         #endregion
 
         #region Constructor
@@ -463,8 +469,8 @@ namespace MsgKit
             }
 
             var utcNow = DateTime.UtcNow;
-            propertiesStream.AddProperty(PropertyTags.PR_CREATION_TIME, utcNow);
-            propertiesStream.AddProperty(PropertyTags.PR_LAST_MODIFICATION_TIME, utcNow);
+            propertiesStream.AddProperty(PropertyTags.PR_CREATION_TIME, CreationTime ?? utcNow);
+            propertiesStream.AddProperty(PropertyTags.PR_LAST_MODIFICATION_TIME, LastModificationTime ?? utcNow);
             propertiesStream.AddProperty(PropertyTags.PR_STORE_SUPPORT_MASK, StoreSupportMaskConst.StoreSupportMask, PropertyFlags.PROPATTR_READABLE);
 
             return propertiesStream.WriteProperties(storage);
